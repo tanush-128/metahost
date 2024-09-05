@@ -1,9 +1,9 @@
-name: GYFT
+name: notification
 domain: gyft.metakgp.org
 description: >
   GYFT is a platform for students to share and access notes, question papers, and other study materials.
   It is a part of MetaKGP.
-image: metakgp/gyft:latest
+image: tanush128/notification:0.0.1-198069d
 port : 80
 nginx:
   # optional (default: true)
