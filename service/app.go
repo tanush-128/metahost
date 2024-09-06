@@ -2,6 +2,7 @@ package service
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/tanush-128/metahost/models"
 )
@@ -46,6 +47,11 @@ func (a *appSerivce) RunApp(conf models.Config) error {
 	if err != nil {
 		return err
 	}
+
+	port := strconv.Itoa(conf.Port)
+
+	manageServer(conf.Domain, port, "http")
+	setupSSL(conf.Domain, "tanuedu128@gmail.com")
 
 	return nil
 }
