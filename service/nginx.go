@@ -14,6 +14,7 @@ type NginxService interface {
 	UpdateOrInstallNginx() error
 	AddServer(serverName, serverPort, protocol string) error
 	CheckIfServerExists(serverName, serverPort, protocol string) (bool, error)
+	ResetNginxToDefault() error
 }
 
 type nginxSerivce struct {
@@ -131,6 +132,49 @@ func (n *nginxSerivce) UpdateOrInstallNginx() error {
 	}
 	return nil
 
+}
+
+func (n *nginxSerivce) ResetNginxToDefault() error {
+	fmt.Println("Resetting NGINX to its default state...")
+
+	// Stop NGINX service
+	fmt.Println("Stopping NGINX...")
+	if err := exec.Command("sudo", "systemctl", "stop", "nginx").Run(); err != nil {
+		return fmt.Errorf("failed to stop NGINX: %v", err)
+	}
+
+	// Remove custom configurations
+	fmt.Println("Removing custom configurations in /etc/nginx/sites-available and /etc/nginx/sites-enabled...")
+	if err := os.RemoveAll("/etc/nginx/sites-available"); err != nil {
+		return fmt.Errorf("failed to remove sites-available directory: %v", err)
+	}
+	if err := os.RemoveAll("/etc/nginx/sites-enabled"); err != nil {
+		return fmt.Errorf("failed to remove sites-enabled directory: %v", err)
+	}
+
+	// Reinstall NGINX to reset to its default state
+	fmt.Println("Reinstalling NGINX...")
+	if err := exec.Command("sudo", "apt", "update").Run(); err != nil {
+		return fmt.Errorf("failed to update package list: %v", err)
+	}
+	if err := exec.Command("sudo", "apt", "install", "--reinstall", "-y", "nginx").Run(); err != nil {
+		return fmt.Errorf("failed to reinstall NGINX: %v", err)
+	}
+
+	// Restore default nginx.conf
+	fmt.Println("Restoring default nginx.conf...")
+	if err := exec.Command("sudo", "cp", "/etc/nginx/nginx.conf.default", "/etc/nginx/nginx.conf").Run(); err != nil {
+		return fmt.Errorf("failed to restore default nginx.conf: %v", err)
+	}
+
+	// Start NGINX
+	fmt.Println("Starting NGINX...")
+	if err := exec.Command("sudo", "systemctl", "start", "nginx").Run(); err != nil {
+		return fmt.Errorf("failed to start NGINX: %v", err)
+	}
+
+	fmt.Println("NGINX has been reset to its default state.")
+	return nil
 }
 
 func prepareNginxConf(serverName, serverPort, protocol string) (string, error) {

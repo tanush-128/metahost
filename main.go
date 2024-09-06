@@ -54,6 +54,7 @@ func main() {
 	dockerClient := service.NewDockerClient(ctx, cli)
 	nginxService := service.NewNginxSerivce(dockerClient)
 	sslService := service.NewSSLService()
+	err = nginxService.ResetNginxToDefault()
 	err = nginxService.UpdateOrInstallNginx()
 	if err != nil {
 		panic(err)
