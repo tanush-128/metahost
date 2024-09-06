@@ -67,6 +67,11 @@ func (a *appSerivce) RunApp(conf models.Config) error {
 
 	if exists {
 		log.Printf("'%+v' - Nginx configuration already exists \n", conf.Domain)
+		err = a.sslService.SetupSSL(conf.Domain, "tanuedu128@gmail.com")
+		if err != nil {
+			log.Println(err)
+			return err
+		}
 		return nil
 	}
 
