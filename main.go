@@ -98,7 +98,7 @@ func monitorRepo(ctx context.Context, client *github.Client, repoConfig RepoConf
 			}
 
 			for _, appConf := range appConfs {
-				go appService.RunApp(appConf)
+				appService.RunApp(appConf)
 			}
 
 		} else if *latestCommit.SHA != *commits[0].SHA {
