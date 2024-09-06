@@ -13,11 +13,18 @@ type AppService interface {
 
 type appSerivce struct {
 	dockerClient DockerClient
+	nginxSerivce NginxService
+	sslService   SSLService
 }
 
-func NewAppSerivce(dockerClient DockerClient) AppService {
+func NewAppSerivce(dockerClient DockerClient,
+	nginxSerivce NginxService,
+	sslService SSLService,
+) AppService {
 	return &appSerivce{
 		dockerClient: dockerClient,
+		nginxSerivce: nginxSerivce,
+		sslService:   sslService,
 	}
 }
 
@@ -43,15 +50,42 @@ func (a *appSerivce) RunApp(conf models.Config) error {
 
 	}
 
-	err = a.dockerClient.RunContainer(conf.Image, conf.Name)
+	port := strconv.Itoa(conf.Port)
+
+	err = a.dockerClient.RunContainer(conf.Image, conf.Name, port, port)
 	if err != nil {
+		log.Println(err)
+
 		return err
 	}
 
-	port := strconv.Itoa(conf.Port)
+	exists, err := a.nginxSerivce.CheckIfServerExists(conf.Domain, port, "http")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 
-	manageServer(conf.Domain, port, "http")
-	setupSSL(conf.Domain, "tanuedu128@gmail.com")
+	if exists {
+		log.Printf("'%+v' - Nginx configuration already exists \n", conf.Domain)
+		err = a.sslService.SetupSSL(conf.Domain, "tanuedu128@gmail.com")
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		return nil
+	}
+
+	err = a.nginxSerivce.AddServer(conf.Domain, port, "http")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	err = a.sslService.SetupSSL(conf.Domain, "tanuedu128@gmail.com")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 
 	return nil
 }

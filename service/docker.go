@@ -14,7 +14,7 @@ import (
 )
 
 type DockerClient interface {
-	RunContainer(imageName string, containerName string) error
+	RunContainer(imageName string, containerName string, exposePort string, hostPort string) error
 	StopContainer(id string, opts *StopContainerOptions) error
 	DeleteImage(id string) error
 	GetContainer(name string) (types.Container, error)
@@ -55,7 +55,7 @@ func (dc *dockerClient) GetContainer(containerName string) (types.Container, err
 	return types.Container{}, nil
 }
 
-func (dc *dockerClient) RunContainer(imageName string, containerName string) error {
+func (dc *dockerClient) RunContainer(imageName string, containerName string, exposePort string, hostPort string) error {
 
 	out, err := dc.cli.ImagePull(dc.ctx, imageName, image.PullOptions{})
 	if err != nil {
@@ -64,7 +64,7 @@ func (dc *dockerClient) RunContainer(imageName string, containerName string) err
 	defer out.Close()
 	io.Copy(io.Discard, out)
 
-	port, _ := nat.NewPort("tcp", "8080")
+	port, _ := nat.NewPort("tcp", exposePort)
 	resp, err := dc.cli.ContainerCreate(dc.ctx, &container.Config{
 		Image: imageName,
 		ExposedPorts: nat.PortSet{
@@ -75,7 +75,7 @@ func (dc *dockerClient) RunContainer(imageName string, containerName string) err
 			port: []nat.PortBinding{
 				{
 					HostIP:   "0.0.0.0",
-					HostPort: "8000",
+					HostPort: hostPort,
 				},
 			},
 		},
