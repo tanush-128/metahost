@@ -5,10 +5,20 @@ import (
 	"os/exec"
 )
 
-func setupSSL(domain, email string) error {
+type SSLService interface {
+	SetupSSL(domain, email string) error
+}
+
+type sslService struct{}
+
+func NewSSLService() SSLService {
+	return &sslService{}
+}
+
+func (s *sslService) SetupSSL(domain, email string) error {
 	// Ensure domain is provided
 	if domain == "" {
-		return fmt.Errorf("Domain name is required")
+		return fmt.Errorf("domain name is required")
 	}
 
 	// Check if Certbot is installed

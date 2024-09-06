@@ -52,8 +52,14 @@ func main() {
 	defer cli.Close()
 
 	dockerClient := service.NewDockerClient(ctx, cli)
+	nginxService := service.NewNginxSerivce(dockerClient)
+	sslService := service.NewSSLService()
+	err = nginxService.UpdateOrInstallNginx()
+	if err != nil {
+		panic(err)
+	}
 
-	appService := service.NewAppSerivce(dockerClient)
+	appService := service.NewAppSerivce(dockerClient, nginxService, sslService)
 
 	// content, err := ioutil.ReadFile("test.yaml")
 	// testAppConf, err := utils.ParseYaml(string(content))
