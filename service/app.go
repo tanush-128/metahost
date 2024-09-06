@@ -45,13 +45,24 @@ func (a *appSerivce) RunApp(conf models.Config) error {
 
 	err = a.dockerClient.RunContainer(conf.Image, conf.Name)
 	if err != nil {
+		log.Println(err)
+
 		return err
 	}
 
 	port := strconv.Itoa(conf.Port)
 
-	manageServer(conf.Domain, port, "http")
-	setupSSL(conf.Domain, "tanuedu128@gmail.com")
+	err = manageServer(conf.Domain, port, "http")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	err = setupSSL(conf.Domain, "tanuedu128@gmail.com")
+	if err != nil {
+		log.Println(err)
+		return err
+	}
 
 	return nil
 }
